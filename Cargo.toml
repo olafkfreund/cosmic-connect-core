@@ -1,0 +1,84 @@
+[package]
+name = "cosmic-connect-core"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70"
+authors = ["Olaf Kfreund <olafkfreund@gmail.com>"]
+license = "GPL-2.0-or-later OR GPL-3.0-or-later"
+description = "KDE Connect protocol implementation in Rust - shared library for COSMIC Connect"
+repository = "https://github.com/olafkfreund/cosmic-connect-core"
+readme = "README.md"
+keywords = ["kdeconnect", "protocol", "cosmic", "android"]
+categories = ["network-programming", "api-bindings"]
+
+[lib]
+crate-type = ["lib", "cdylib", "staticlib"]
+name = "cosmic_connect_core"
+
+[features]
+default = []
+ffi = []  # Enable FFI bindings for Kotlin/Swift
+
+[dependencies]
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+async-trait = "0.1"
+
+# Networking
+socket2 = "0.5"
+
+# TLS (using rustls instead of OpenSSL for better cross-compilation)
+rustls = "0.23"
+tokio-rustls = "0.26"
+rcgen = "0.13"           # Certificate generation
+webpki-roots = "0.26"
+rustls-pemfile = "2.0"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# FFI
+uniffi = { version = "0.27", features = ["cli"] }
+
+# Crypto utilities
+sha2 = "0.10"
+hex = "0.4"
+rand = "0.8"
+
+# Time
+chrono = "0.4"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Utilities
+once_cell = "1.19"
+uuid = { version = "1.6", features = ["v4", "serde"] }
+
+[dev-dependencies]
+tokio-test = "0.4"
+criterion = "0.5"
+tempfile = "3.13"
+
+[build-dependencies]
+uniffi = { version = "0.27", features = ["build"] }
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "uniffi-bindgen.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+
+[profile.dev]
+opt-level = 0
+debug = true
