@@ -20,6 +20,7 @@
 
 use crate::error::{ProtocolError, Result};
 use rcgen::{CertificateParams, DistinguishedName, DnType, KeyPair};
+use rsa::{RsaPrivateKey, pkcs8::EncodePrivateKey};
 use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::Path;
@@ -73,11 +74,28 @@ impl CertificateInfo {
 
         info!("Generating RSA 2048-bit certificate for device: {}", device_id);
 
+        // Generate RSA 2048-bit key using rsa crate
+        // (rcgen 0.12 doesn't support RSA key generation directly)
+        let mut rng = rand::thread_rng();
+        let private_key = RsaPrivateKey::new(&mut rng, 2048)
+            .map_err(|e| ProtocolError::Certificate(format!("Failed to generate RSA key: {}", e)))?;
+
+        // Convert to PKCS#8 DER format
+        let private_key_der = private_key.to_pkcs8_der()
+            .map_err(|e| ProtocolError::Certificate(format!("Failed to encode private key: {}", e)))?;
+
+        // Import into rcgen KeyPair
+        let key_pair = KeyPair::from_der(private_key_der.as_bytes())
+            .map_err(|e| ProtocolError::Certificate(format!("Failed to import key pair: {}", e)))?;
+
         // Create certificate parameters
         let mut params = CertificateParams::new(vec![device_id.clone()]);
 
-        // Set algorithm to RSA with SHA-256
+        // Set algorithm to RSA with SHA-256 (must match the key pair)
         params.alg = &rcgen::PKCS_RSA_SHA256;
+
+        // Set the RSA key pair
+        params.key_pair = Some(key_pair);
 
         // Set distinguished name (DN)
         let mut dn = DistinguishedName::new();

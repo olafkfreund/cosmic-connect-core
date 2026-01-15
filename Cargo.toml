@@ -51,6 +51,8 @@ hex = "0.4"
 rand = "0.8"
 pem = "3.0"              # PEM encoding/decoding
 x509-parser = "0.16"     # Certificate parsing
+rsa = "0.9"              # RSA key generation
+pkcs8 = { version = "0.10", features = ["pem"] }  # PKCS#8 encoding
 
 # Time
 chrono = "0.4"
