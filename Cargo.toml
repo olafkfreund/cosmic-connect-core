@@ -27,9 +27,11 @@ async-trait = "0.1"
 # Networking
 socket2 = "0.5"
 
-# TLS (using rustls instead of OpenSSL for better cross-compilation)
-rustls = "0.23"
-tokio-rustls = "0.26"
+# TLS (using rustls 0.22 with ring provider for Android cross-compilation compatibility)
+# Note: rustls 0.23+ uses aws-lc-rs by default which has complex C dependencies
+# rustls 0.22 uses ring which compiles cleanly for Android targets
+rustls = "0.22"
+tokio-rustls = "0.25"
 rcgen = "0.12"           # Certificate generation (0.12 for stable API)
 webpki-roots = "0.26"
 rustls-pemfile = "2.0"
