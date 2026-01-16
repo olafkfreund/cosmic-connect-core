@@ -452,6 +452,48 @@ namespace cosmic_connect_core {
   /// Creates a packet to stop presentation mode on the remote device.
   [Throws=ProtocolError]
   FfiPacket create_presenter_stop();
+
+  // ========================================================================
+  // SystemVolume Plugin
+  // ========================================================================
+
+  /// Create a systemvolume set volume request packet
+  ///
+  /// Creates a packet to request changing the volume of a specific audio sink.
+  ///
+  /// # Arguments
+  ///
+  /// * `sink_name` - Name of the audio sink (e.g., "Speaker", "Headphones")
+  /// * `volume` - Volume level (0-100)
+  [Throws=ProtocolError]
+  FfiPacket create_systemvolume_volume(string sink_name, i32 volume);
+
+  /// Create a systemvolume mute request packet
+  ///
+  /// Creates a packet to request muting or unmuting a specific audio sink.
+  ///
+  /// # Arguments
+  ///
+  /// * `sink_name` - Name of the audio sink (e.g., "Speaker", "Headphones")
+  /// * `muted` - True to mute, false to unmute
+  [Throws=ProtocolError]
+  FfiPacket create_systemvolume_mute(string sink_name, boolean muted);
+
+  /// Create a systemvolume enable (set default) request packet
+  ///
+  /// Creates a packet to request enabling (setting as default) an audio sink.
+  ///
+  /// # Arguments
+  ///
+  /// * `sink_name` - Name of the audio sink to enable (e.g., "HDMI Output")
+  [Throws=ProtocolError]
+  FfiPacket create_systemvolume_enable(string sink_name);
+
+  /// Create a systemvolume sink list request packet
+  ///
+  /// Creates a packet to request the list of available audio sinks.
+  [Throws=ProtocolError]
+  FfiPacket create_systemvolume_request_sinks();
 };
 
 // ==========================================================================

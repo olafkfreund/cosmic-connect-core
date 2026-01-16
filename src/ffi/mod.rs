@@ -1177,6 +1177,135 @@ pub fn create_presenter_stop() -> Result<FfiPacket> {
 }
 
 // ==========================================================================
+// SystemVolume Plugin
+// ==========================================================================
+
+/// Create a systemvolume set volume request packet
+///
+/// This function creates a packet to request changing the volume of a specific audio sink
+/// on the remote device.
+///
+/// # Arguments
+///
+/// * `sink_name` - Name of the audio sink (e.g., "Speaker", "Headphones")
+/// * `volume` - Volume level (0-100)
+///
+/// # Returns
+///
+/// A packet to set the volume of the specified sink
+///
+/// # Example
+///
+/// ```ignore
+/// let packet = create_systemvolume_volume("Speaker".to_string(), 75)?;
+/// // Send packet to desktop...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_systemvolume_volume(sink_name: String, volume: i32) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let body = json!({
+        "name": sink_name,
+        "volume": volume,
+    });
+
+    let packet = Packet::new("kdeconnect.systemvolume.request", body);
+    Ok(packet.into())
+}
+
+/// Create a systemvolume mute request packet
+///
+/// This function creates a packet to request muting or unmuting a specific audio sink
+/// on the remote device.
+///
+/// # Arguments
+///
+/// * `sink_name` - Name of the audio sink (e.g., "Speaker", "Headphones")
+/// * `muted` - True to mute, false to unmute
+///
+/// # Returns
+///
+/// A packet to mute/unmute the specified sink
+///
+/// # Example
+///
+/// ```ignore
+/// let packet = create_systemvolume_mute("Headphones".to_string(), true)?;
+/// // Send packet to desktop...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_systemvolume_mute(sink_name: String, muted: bool) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let body = json!({
+        "name": sink_name,
+        "muted": muted,
+    });
+
+    let packet = Packet::new("kdeconnect.systemvolume.request", body);
+    Ok(packet.into())
+}
+
+/// Create a systemvolume enable (set default) request packet
+///
+/// This function creates a packet to request enabling (setting as default) a specific
+/// audio sink on the remote device.
+///
+/// # Arguments
+///
+/// * `sink_name` - Name of the audio sink to enable (e.g., "HDMI Output")
+///
+/// # Returns
+///
+/// A packet to enable the specified sink
+///
+/// # Example
+///
+/// ```ignore
+/// let packet = create_systemvolume_enable("HDMI Output".to_string())?;
+/// // Send packet to desktop...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_systemvolume_enable(sink_name: String) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let body = json!({
+        "name": sink_name,
+        "enabled": true,
+    });
+
+    let packet = Packet::new("kdeconnect.systemvolume.request", body);
+    Ok(packet.into())
+}
+
+/// Create a systemvolume sink list request packet
+///
+/// This function creates a packet to request the list of available audio sinks
+/// from the remote device.
+///
+/// # Returns
+///
+/// A packet to request the sink list
+///
+/// # Example
+///
+/// ```ignore
+/// let packet = create_systemvolume_request_sinks()?;
+/// // Send packet to desktop...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_systemvolume_request_sinks() -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let body = json!({
+        "requestSinks": true
+    });
+
+    let packet = Packet::new("kdeconnect.systemvolume.request", body);
+    Ok(packet.into())
+}
+
+// ==========================================================================
 // Certificate Management
 // ==========================================================================
 
