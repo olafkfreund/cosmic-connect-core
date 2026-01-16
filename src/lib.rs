@@ -64,6 +64,7 @@ pub use ffi::{
     create_systemvolume_volume, create_systemvolume_mute,
     create_systemvolume_enable, create_systemvolume_request_sinks,
     create_connectivity_report,
+    create_contacts_response_uids, create_contacts_response_vcards,
 };
 
 // Public modules

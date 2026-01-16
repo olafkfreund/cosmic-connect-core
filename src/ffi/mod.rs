@@ -1346,6 +1346,108 @@ pub fn create_connectivity_report(signal_strengths_json: String) -> Result<FfiPa
 }
 
 // ==========================================================================
+// Contacts Plugin
+// ==========================================================================
+
+/// Create contacts response packet with UIDs and timestamps
+///
+/// Creates a packet containing contact unique IDs and their last-modified timestamps.
+/// Used for contact synchronization between devices.
+///
+/// # Arguments
+///
+/// * `uids_json` - JSON string containing UIDs and timestamps in the format:
+///   ```json
+///   {
+///     "uids": ["1", "3", "15"],
+///     "1": "1234567890",
+///     "3": "1234567891",
+///     "15": "1234567892"
+///   }
+///   ```
+///
+/// # Returns
+///
+/// An FfiPacket containing:
+/// - Type: `cosmicconnect.contacts.response_uids_timestamps`
+/// - Body: The parsed JSON data
+///
+/// # Errors
+///
+/// Returns `ProtocolError::Json` if the JSON string cannot be parsed.
+///
+/// # Example
+///
+/// ```no_run
+/// use cosmic_connect_core::create_contacts_response_uids;
+/// use serde_json::json;
+///
+/// let uids_data = json!({
+///     "uids": ["1", "3"],
+///     "1": "1234567890",
+///     "3": "1234567891"
+/// });
+/// let packet = create_contacts_response_uids(uids_data.to_string())?;
+/// // Send packet to desktop...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_contacts_response_uids(uids_json: String) -> Result<FfiPacket> {
+    // Parse the UIDs/timestamps JSON
+    let uids_data: serde_json::Value = serde_json::from_str(&uids_json)?;
+
+    let packet = Packet::new("cosmicconnect.contacts.response_uids_timestamps", uids_data);
+    Ok(packet.into())
+}
+
+/// Create contacts response packet with vCards
+///
+/// Creates a packet containing full vCard data for requested contacts.
+/// Used to transfer complete contact information including names, phone numbers, etc.
+///
+/// # Arguments
+///
+/// * `vcards_json` - JSON string containing UIDs and vCard data in the format:
+///   ```json
+///   {
+///     "uids": ["1", "3"],
+///     "1": "BEGIN:VCARD\nFN:John Smith\nEND:VCARD",
+///     "3": "BEGIN:VCARD\nFN:Jane Doe\nEND:VCARD"
+///   }
+///   ```
+///
+/// # Returns
+///
+/// An FfiPacket containing:
+/// - Type: `cosmicconnect.contacts.response_vcards`
+/// - Body: The parsed JSON data
+///
+/// # Errors
+///
+/// Returns `ProtocolError::Json` if the JSON string cannot be parsed.
+///
+/// # Example
+///
+/// ```no_run
+/// use cosmic_connect_core::create_contacts_response_vcards;
+/// use serde_json::json;
+///
+/// let vcards_data = json!({
+///     "uids": ["1"],
+///     "1": "BEGIN:VCARD\nFN:John Smith\nEND:VCARD"
+/// });
+/// let packet = create_contacts_response_vcards(vcards_data.to_string())?;
+/// // Send packet to desktop...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_contacts_response_vcards(vcards_json: String) -> Result<FfiPacket> {
+    // Parse the vCards JSON
+    let vcards_data: serde_json::Value = serde_json::from_str(&vcards_json)?;
+
+    let packet = Packet::new("cosmicconnect.contacts.response_vcards", vcards_data);
+    Ok(packet.into())
+}
+
+// ==========================================================================
 // Certificate Management
 // ==========================================================================
 

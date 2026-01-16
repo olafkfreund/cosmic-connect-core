@@ -508,6 +508,30 @@ namespace cosmic_connect_core {
   /// * `signal_strengths_json` - JSON string with subscription states
   [Throws=ProtocolError]
   FfiPacket create_connectivity_report(string signal_strengths_json);
+
+  // ========================================================================
+  // Contacts Plugin
+  // ========================================================================
+
+  /// Create contacts response packet with UIDs and timestamps
+  ///
+  /// Creates a packet containing contact unique IDs and their last-modified timestamps.
+  ///
+  /// # Arguments
+  ///
+  /// * `uids_json` - JSON string containing UIDs and timestamps
+  [Throws=ProtocolError]
+  FfiPacket create_contacts_response_uids(string uids_json);
+
+  /// Create contacts response packet with vCards
+  ///
+  /// Creates a packet containing full vCard data for requested contacts.
+  ///
+  /// # Arguments
+  ///
+  /// * `vcards_json` - JSON string containing UIDs and vCard data
+  [Throws=ProtocolError]
+  FfiPacket create_contacts_response_vcards(string vcards_json);
 };
 
 // ==========================================================================
