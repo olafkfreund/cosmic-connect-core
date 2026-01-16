@@ -188,6 +188,13 @@ pub trait PluginCallback: Send + Sync {
     fn on_packet_received(&self, device_id: String, packet: FfiPacket);
 }
 
+/// Payload transfer callback trait
+pub trait PayloadCallback: Send + Sync {
+    fn on_progress(&self, bytes_transferred: u64, total_bytes: u64);
+    fn on_complete(&self);
+    fn on_error(&self, error: String);
+}
+
 // ==========================================================================
 // Namespace Functions
 // ==========================================================================
@@ -243,6 +250,107 @@ pub fn deserialize_packet(data: Vec<u8>) -> Result<FfiPacket> {
     let packet = Packet::from_bytes(&data)?;
     Ok(packet.into())
 }
+
+// ==========================================================================
+// Share Plugin Functions
+// ==========================================================================
+
+/// Create a file share packet
+///
+/// Creates a packet for sharing a file with optional metadata.
+/// The file payload must be sent separately via payload transfer.
+///
+/// # Arguments
+/// * `filename` - Name of the file being shared
+/// * `size` - Size of the file in bytes
+/// * `creation_time` - Optional creation timestamp (milliseconds since epoch)
+/// * `last_modified` - Optional last modified timestamp (milliseconds since epoch)
+pub fn create_file_share_packet(
+    filename: String,
+    size: i64,
+    creation_time: Option<i64>,
+    last_modified: Option<i64>,
+) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let mut body = json!({
+        "filename": filename,
+    });
+
+    if let Some(time) = creation_time {
+        body["creationTime"] = json!(time);
+    }
+
+    if let Some(time) = last_modified {
+        body["lastModified"] = json!(time);
+    }
+
+    let mut packet = Packet::new("kdeconnect.share.request".to_string(), body);
+    packet.payload_size = Some(size);
+
+    Ok(packet.into())
+}
+
+/// Create a text share packet
+///
+/// Creates a packet for sharing plain text content.
+///
+/// # Arguments
+/// * `text` - Text content to share
+pub fn create_text_share_packet(text: String) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let body = json!({
+        "text": text,
+    });
+
+    let packet = Packet::new("kdeconnect.share.request".to_string(), body);
+    Ok(packet.into())
+}
+
+/// Create a URL share packet
+///
+/// Creates a packet for sharing a URL.
+///
+/// # Arguments
+/// * `url` - URL to share
+pub fn create_url_share_packet(url: String) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let body = json!({
+        "url": url,
+    });
+
+    let packet = Packet::new("kdeconnect.share.request".to_string(), body);
+    Ok(packet.into())
+}
+
+/// Create a multi-file update packet
+///
+/// Creates a packet indicating multiple files will be transferred.
+/// This packet is sent before transferring multiple files.
+///
+/// # Arguments
+/// * `number_of_files` - Total number of files to be transferred
+/// * `total_payload_size` - Combined size of all files in bytes
+pub fn create_multifile_update_packet(
+    number_of_files: i32,
+    total_payload_size: i64,
+) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let body = json!({
+        "numberOfFiles": number_of_files,
+        "totalPayloadSize": total_payload_size,
+    });
+
+    let packet = Packet::new("kdeconnect.share.request.update".to_string(), body);
+    Ok(packet.into())
+}
+
+// ==========================================================================
+// Certificate Functions
+// ==========================================================================
 
 /// Generate a new self-signed certificate
 pub fn generate_certificate(device_id: String) -> Result<FfiCertificate> {
@@ -509,6 +617,164 @@ impl PluginManager {
             pings_sent: 0,
         }
     }
+}
+
+/// Payload transfer handle
+pub struct PayloadTransferHandle {
+    transfer_id: u64,
+    callback: Arc<Box<dyn PayloadCallback>>,
+    cancel_token: Arc<RwLock<bool>>,
+    runtime: Arc<tokio::runtime::Runtime>,
+}
+
+impl PayloadTransferHandle {
+    fn new(
+        transfer_id: u64,
+        callback: Box<dyn PayloadCallback>,
+        runtime: Arc<tokio::runtime::Runtime>,
+    ) -> Self {
+        Self {
+            transfer_id,
+            callback: Arc::new(callback),
+            cancel_token: Arc::new(RwLock::new(false)),
+            runtime,
+        }
+    }
+
+    /// Get the transfer ID
+    pub fn get_id(&self) -> u64 {
+        self.transfer_id
+    }
+
+    /// Cancel the payload transfer
+    pub fn cancel(&self) -> Result<()> {
+        let cancel_token = Arc::clone(&self.cancel_token);
+        self.runtime.block_on(async move {
+            let mut token = cancel_token.write().await;
+            *token = true;
+            Ok(())
+        })
+    }
+
+    /// Check if transfer is cancelled
+    pub fn is_cancelled(&self) -> bool {
+        self.runtime.block_on(async {
+            let token = self.cancel_token.read().await;
+            *token
+        })
+    }
+}
+
+/// Start a payload download
+///
+/// Downloads a file payload from a remote device via TCP connection.
+/// Progress, completion, and errors are reported via the callback.
+///
+/// # Arguments
+/// * `device_host` - IP address of the remote device
+/// * `port` - TCP port for payload transfer
+/// * `expected_size` - Expected size of the payload in bytes
+/// * `callback` - Callback for progress updates and completion
+///
+/// # Returns
+/// A PayloadTransferHandle that can be used to cancel the transfer
+pub fn start_payload_download(
+    device_host: String,
+    port: u16,
+    expected_size: i64,
+    callback: Box<dyn PayloadCallback>,
+) -> Result<Arc<PayloadTransferHandle>> {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    use tokio::io::AsyncReadExt;
+    use tokio::net::TcpStream;
+
+    static TRANSFER_ID_COUNTER: AtomicU64 = AtomicU64::new(1);
+
+    let runtime = Arc::new(
+        tokio::runtime::Runtime::new()
+            .map_err(|e| ProtocolError::Other(format!("Failed to create runtime: {}", e)))?,
+    );
+
+    let transfer_id = TRANSFER_ID_COUNTER.fetch_add(1, Ordering::SeqCst);
+    let handle = Arc::new(PayloadTransferHandle::new(transfer_id, callback, Arc::clone(&runtime)));
+
+    let handle_clone = Arc::clone(&handle);
+    let runtime_clone = Arc::clone(&runtime);
+
+    // Spawn the download task
+    runtime_clone.spawn(async move {
+        let callback = Arc::clone(&handle_clone.callback);
+        let cancel_token = Arc::clone(&handle_clone.cancel_token);
+
+        // Attempt to connect
+        let addr = format!("{}:{}", device_host, port);
+        let mut stream = match TcpStream::connect(&addr).await {
+            Ok(s) => s,
+            Err(e) => {
+                callback.on_error(format!("Failed to connect to {}: {}", addr, e));
+                return;
+            }
+        };
+
+        info!("Connected to {} for payload transfer", addr);
+
+        // Download the payload
+        let mut total_bytes = 0u64;
+        let mut buffer = vec![0u8; 8192];
+
+        loop {
+            // Check for cancellation
+            {
+                let token = cancel_token.read().await;
+                if *token {
+                    info!("Payload transfer {} cancelled", transfer_id);
+                    callback.on_error("Transfer cancelled".to_string());
+                    return;
+                }
+            }
+
+            // Read chunk
+            match stream.read(&mut buffer).await {
+                Ok(0) => {
+                    // Connection closed
+                    if total_bytes >= expected_size as u64 {
+                        info!("Payload transfer {} complete: {} bytes", transfer_id, total_bytes);
+                        callback.on_complete();
+                    } else {
+                        error!(
+                            "Payload transfer {} incomplete: {} of {} bytes",
+                            transfer_id, total_bytes, expected_size
+                        );
+                        callback.on_error(format!(
+                            "Transfer incomplete: {} of {} bytes",
+                            total_bytes, expected_size
+                        ));
+                    }
+                    break;
+                }
+                Ok(n) => {
+                    total_bytes += n as u64;
+
+                    // Report progress
+                    callback.on_progress(total_bytes, expected_size as u64);
+
+                    // Check if we've received all expected bytes
+                    if total_bytes >= expected_size as u64 {
+                        info!("Payload transfer {} complete: {} bytes", transfer_id, total_bytes);
+                        callback.on_complete();
+                        break;
+                    }
+                }
+                Err(e) => {
+                    error!("Payload transfer {} error: {}", transfer_id, e);
+                    callback.on_error(format!("Transfer error: {}", e));
+                    break;
+                }
+            }
+        }
+    });
+
+    Ok(handle)
 }
 
 #[cfg(test)]

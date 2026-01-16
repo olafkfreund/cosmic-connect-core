@@ -41,12 +41,14 @@ pub use network::discovery;
 pub use ffi::{
     FfiPacket, FfiDeviceInfo, FfiCertificate, FfiBatteryState,
     FfiCapabilities, FfiPingStats, DiscoveryEvent,
-    DiscoveryCallback, PluginCallback,
-    DiscoveryService, PluginManager,
+    DiscoveryCallback, PluginCallback, PayloadCallback,
+    DiscoveryService, PluginManager, PayloadTransferHandle,
     initialize, get_version, get_protocol_version,
     create_packet, create_packet_with_id, serialize_packet, deserialize_packet,
     generate_certificate, load_certificate, save_certificate, get_certificate_fingerprint,
     start_discovery, create_plugin_manager,
+    create_file_share_packet, create_text_share_packet, create_url_share_packet,
+    create_multifile_update_packet, start_payload_download,
 };
 
 // Public modules

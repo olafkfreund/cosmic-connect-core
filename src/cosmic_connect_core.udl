@@ -105,6 +105,87 @@ namespace cosmic_connect_core {
 
   /// Create a new plugin manager
   PluginManager create_plugin_manager();
+
+  // ========================================================================
+  // Share Plugin
+  // ========================================================================
+
+  /// Create a file share packet
+  ///
+  /// Creates a packet for sharing a file with optional metadata.
+  /// The file payload must be sent separately via payload transfer.
+  ///
+  /// # Arguments
+  ///
+  /// * `filename` - Name of the file being shared
+  /// * `size` - Size of the file in bytes
+  /// * `creation_time` - Optional creation timestamp (milliseconds since epoch)
+  /// * `last_modified` - Optional last modified timestamp (milliseconds since epoch)
+  [Throws=ProtocolError]
+  FfiPacket create_file_share_packet(
+    string filename,
+    i64 size,
+    i64? creation_time,
+    i64? last_modified
+  );
+
+  /// Create a text share packet
+  ///
+  /// Creates a packet for sharing plain text content.
+  ///
+  /// # Arguments
+  ///
+  /// * `text` - Text content to share
+  [Throws=ProtocolError]
+  FfiPacket create_text_share_packet(string text);
+
+  /// Create a URL share packet
+  ///
+  /// Creates a packet for sharing a URL.
+  ///
+  /// # Arguments
+  ///
+  /// * `url` - URL to share
+  [Throws=ProtocolError]
+  FfiPacket create_url_share_packet(string url);
+
+  /// Create a multi-file update packet
+  ///
+  /// Creates a packet indicating multiple files will be transferred.
+  /// This packet is sent before transferring multiple files.
+  ///
+  /// # Arguments
+  ///
+  /// * `number_of_files` - Total number of files to be transferred
+  /// * `total_payload_size` - Combined size of all files in bytes
+  [Throws=ProtocolError]
+  FfiPacket create_multifile_update_packet(
+    i32 number_of_files,
+    i64 total_payload_size
+  );
+
+  /// Start a payload download
+  ///
+  /// Downloads a file payload from a remote device via TCP connection.
+  /// Progress, completion, and errors are reported via the callback.
+  ///
+  /// # Arguments
+  ///
+  /// * `device_host` - IP address of the remote device
+  /// * `port` - TCP port for payload transfer
+  /// * `expected_size` - Expected size of the payload in bytes
+  /// * `callback` - Callback for progress updates and completion
+  ///
+  /// # Returns
+  ///
+  /// A PayloadTransferHandle that can be used to cancel the transfer
+  [Throws=ProtocolError]
+  PayloadTransferHandle start_payload_download(
+    string device_host,
+    u16 port,
+    i64 expected_size,
+    PayloadCallback callback
+  );
 };
 
 // ==========================================================================
@@ -254,6 +335,19 @@ dictionary FfiPingStats {
   u64 pings_sent;
 };
 
+/// Payload transfer handle
+interface PayloadTransferHandle {
+  /// Get the transfer ID
+  u64 get_id();
+
+  /// Cancel the payload transfer
+  [Throws=ProtocolError]
+  void cancel();
+
+  /// Check if transfer is cancelled
+  boolean is_cancelled();
+};
+
 // ==========================================================================
 // Callbacks (Platform → Rust communication)
 // ==========================================================================
@@ -284,4 +378,27 @@ callback interface PluginCallback {
 
   /// Called when a generic packet is received
   void on_packet_received(string device_id, FfiPacket packet);
+};
+
+/// Payload transfer callback interface
+///
+/// Receives progress updates and completion status for payload transfers.
+callback interface PayloadCallback {
+  /// Called periodically during transfer with progress
+  ///
+  /// # Arguments
+  ///
+  /// * `bytes_transferred` - Number of bytes transferred so far
+  /// * `total_bytes` - Total expected bytes
+  void on_progress(u64 bytes_transferred, u64 total_bytes);
+
+  /// Called when transfer completes successfully
+  void on_complete();
+
+  /// Called when transfer fails
+  ///
+  /// # Arguments
+  ///
+  /// * `error` - Error message describing the failure
+  void on_error(string error);
 };
