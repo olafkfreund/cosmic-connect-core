@@ -494,6 +494,20 @@ namespace cosmic_connect_core {
   /// Creates a packet to request the list of available audio sinks.
   [Throws=ProtocolError]
   FfiPacket create_systemvolume_request_sinks();
+
+  // ========================================================================
+  // ConnectivityReport Plugin
+  // ========================================================================
+
+  /// Create a connectivity report packet
+  ///
+  /// Creates a packet containing network connectivity state information.
+  ///
+  /// # Arguments
+  ///
+  /// * `signal_strengths_json` - JSON string with subscription states
+  [Throws=ProtocolError]
+  FfiPacket create_connectivity_report(string signal_strengths_json);
 };
 
 // ==========================================================================

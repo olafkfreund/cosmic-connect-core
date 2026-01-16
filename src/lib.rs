@@ -63,6 +63,7 @@ pub use ffi::{
     create_presenter_pointer, create_presenter_stop,
     create_systemvolume_volume, create_systemvolume_mute,
     create_systemvolume_enable, create_systemvolume_request_sinks,
+    create_connectivity_report,
 };
 
 // Public modules

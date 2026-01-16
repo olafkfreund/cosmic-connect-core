@@ -1306,6 +1306,46 @@ pub fn create_systemvolume_request_sinks() -> Result<FfiPacket> {
 }
 
 // ==========================================================================
+// ConnectivityReport Plugin
+// ==========================================================================
+
+/// Create a connectivity report packet
+///
+/// This function creates a packet containing network connectivity state information,
+/// including network type and signal strength for each cellular subscription.
+///
+/// # Arguments
+///
+/// * `signal_strengths_json` - JSON string containing subscription states
+///   Format: {"subID": {"networkType": "4G", "signalStrength": 3}, ...}
+///
+/// # Returns
+///
+/// A packet containing connectivity information
+///
+/// # Example
+///
+/// ```ignore
+/// let signal_data = r#"{"6": {"networkType": "4G", "signalStrength": 3}}"#;
+/// let packet = create_connectivity_report(signal_data.to_string())?;
+/// // Send packet to desktop...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_connectivity_report(signal_strengths_json: String) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    // Parse the signal strengths JSON
+    let signal_strengths: serde_json::Value = serde_json::from_str(&signal_strengths_json)?;
+
+    let body = json!({
+        "signalStrengths": signal_strengths
+    });
+
+    let packet = Packet::new("kdeconnect.connectivity_report", body);
+    Ok(packet.into())
+}
+
+// ==========================================================================
 // Certificate Management
 // ==========================================================================
 
