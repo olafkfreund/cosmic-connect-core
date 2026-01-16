@@ -1205,17 +1205,20 @@ impl DiscoveryService {
 /// Plugin manager
 pub struct PluginManager {
     core: Arc<RwLock<CorePluginManager>>,
-    runtime: tokio::runtime::Runtime,
+    runtime: Arc<tokio::runtime::Runtime>,
+    // Plugin-specific instances for direct access
+    ping_plugin: Arc<RwLock<PingPlugin>>,
 }
 
 impl PluginManager {
     fn new() -> Self {
-        let runtime = tokio::runtime::Runtime::new()
-            .expect("Failed to create Tokio runtime");
+        let runtime = Arc::new(tokio::runtime::Runtime::new()
+            .expect("Failed to create Tokio runtime"));
 
         Self {
             core: Arc::new(RwLock::new(CorePluginManager::new())),
             runtime,
+            ping_plugin: Arc::new(RwLock::new(PingPlugin::new())),
         }
     }
 }
@@ -1341,28 +1344,26 @@ impl PluginManager {
 
     /// Create a ping packet
     pub fn create_ping(&self, message: Option<String>) -> Result<FfiPacket> {
-        let core = Arc::clone(&self.core);
+        let ping_plugin = Arc::clone(&self.ping_plugin);
 
         self.runtime.block_on(async move {
-            let manager = core.read().await;
-            let plugin = manager.get_plugin("ping")
-                .ok_or_else(|| ProtocolError::Plugin("Ping plugin not registered".to_string()))?;
-
-            let mut plugin_guard = plugin.write().await;
-
-            // Same limitation as above - would need plugin trait extension
-            error!("create_ping: Direct plugin access not yet implemented");
-            Err(ProtocolError::Plugin("Direct plugin access not yet implemented".to_string()))
+            let mut plugin = ping_plugin.write().await;
+            let packet = plugin.create_ping(message);
+            Ok(FfiPacket::from(packet))
         })
     }
 
     /// Get ping statistics
     pub fn get_ping_stats(&self) -> FfiPingStats {
-        // Placeholder - would access ping plugin stats
-        FfiPingStats {
-            pings_received: 0,
-            pings_sent: 0,
-        }
+        let ping_plugin = Arc::clone(&self.ping_plugin);
+
+        self.runtime.block_on(async move {
+            let plugin = ping_plugin.read().await;
+            FfiPingStats {
+                pings_received: plugin.pings_received(),
+                pings_sent: plugin.pings_sent(),
+            }
+        })
     }
 }
 
