@@ -1208,6 +1208,7 @@ pub struct PluginManager {
     runtime: Arc<tokio::runtime::Runtime>,
     // Plugin-specific instances for direct access
     ping_plugin: Arc<RwLock<PingPlugin>>,
+    battery_plugin: Arc<RwLock<BatteryPlugin>>,
 }
 
 impl PluginManager {
@@ -1219,6 +1220,7 @@ impl PluginManager {
             core: Arc::new(RwLock::new(CorePluginManager::new())),
             runtime,
             ping_plugin: Arc::new(RwLock::new(PingPlugin::new())),
+            battery_plugin: Arc::new(RwLock::new(BatteryPlugin::new())),
         }
     }
 }
@@ -1318,28 +1320,24 @@ impl PluginManager {
 
     /// Update local battery state
     pub fn update_battery(&self, state: FfiBatteryState) -> Result<()> {
-        let core = Arc::clone(&self.core);
+        let battery_plugin = Arc::clone(&self.battery_plugin);
         let battery_state: BatteryState = state.into();
 
         self.runtime.block_on(async move {
-            let manager = core.read().await;
-            let plugin = manager.get_plugin("battery")
-                .ok_or_else(|| ProtocolError::Plugin("Battery plugin not registered".to_string()))?;
-
-            let mut plugin_guard = plugin.write().await;
-
-            // Downcast to BatteryPlugin
-            // Note: This is a workaround since we can't easily downcast trait objects
-            // In practice, we'd use a different approach or expose this through the plugin trait
-            error!("update_battery: Direct plugin access not yet implemented");
-            Err(ProtocolError::Plugin("Direct plugin access not yet implemented".to_string()))
+            let mut plugin = battery_plugin.write().await;
+            plugin.update_local_battery(battery_state);
+            Ok(())
         })
     }
 
     /// Get remote battery state
     pub fn get_remote_battery(&self) -> Option<FfiBatteryState> {
-        // Placeholder - would access battery plugin state
-        None
+        let battery_plugin = Arc::clone(&self.battery_plugin);
+
+        self.runtime.block_on(async move {
+            let plugin = battery_plugin.read().await;
+            plugin.remote_battery().map(|state| FfiBatteryState::from(state.clone()))
+        })
     }
 
     /// Create a ping packet
