@@ -67,6 +67,7 @@ pub use ffi::{
     create_contacts_response_uids, create_contacts_response_vcards,
     create_mpris_request,
     create_mousepad_request, create_mousepad_echo, create_mousepad_keyboardstate,
+    create_digitizer_session, create_digitizer_event,
 };
 
 // Public modules

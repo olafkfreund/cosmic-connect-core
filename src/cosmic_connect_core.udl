@@ -581,6 +581,28 @@ namespace cosmic_connect_core {
   /// * `state` - Keyboard visible/active state (true = active)
   [Throws=ProtocolError]
   FfiPacket create_mousepad_keyboardstate(boolean state);
+
+  // Digitizer Plugin
+
+  /// Create a DIGITIZER session packet
+  ///
+  /// Creates a packet for starting or ending a drawing session.
+  ///
+  /// # Arguments
+  ///
+  /// * `body_json` - JSON string containing action and session parameters
+  [Throws=ProtocolError]
+  FfiPacket create_digitizer_session(string body_json);
+
+  /// Create a DIGITIZER event packet
+  ///
+  /// Creates a packet for pen/stylus input events.
+  ///
+  /// # Arguments
+  ///
+  /// * `body_json` - JSON string containing tool event data
+  [Throws=ProtocolError]
+  FfiPacket create_digitizer_event(string body_json);
 };
 
 // ==========================================================================

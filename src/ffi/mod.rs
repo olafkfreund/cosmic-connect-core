@@ -1606,6 +1606,75 @@ pub fn create_mousepad_keyboardstate(state: bool) -> Result<FfiPacket> {
 }
 
 // ==========================================================================
+// Digitizer Plugin
+// ==========================================================================
+
+/// Create DIGITIZER session packet (start/end)
+///
+/// Creates a packet for starting or ending a drawing/stylus session.
+/// Used to initialize the drawing surface with dimensions and resolution,
+/// or to terminate the session.
+///
+/// # Arguments
+///
+/// * `body_json` - JSON string containing action and session parameters
+///
+/// # Example
+///
+/// ```json
+/// // Start session
+/// {
+///   "action": "start",
+///   "width": 1920,
+///   "height": 1080,
+///   "resolutionX": 96,
+///   "resolutionY": 96
+/// }
+///
+/// // End session
+/// {
+///   "action": "end"
+/// }
+/// ```
+pub fn create_digitizer_session(body_json: String) -> Result<FfiPacket> {
+    // Parse the request body JSON
+    let body_data: serde_json::Value = serde_json::from_str(&body_json)?;
+
+    let packet = Packet::new("cosmicconnect.digitizer.session", body_data);
+    Ok(packet.into())
+}
+
+/// Create DIGITIZER event packet (pen/stylus events)
+///
+/// Creates a packet for pen/stylus input events with coordinates, pressure,
+/// and tool type. Used to transmit drawing input from the Android device
+/// to the desktop.
+///
+/// # Arguments
+///
+/// * `body_json` - JSON string containing tool event data
+///
+/// # Example
+///
+/// ```json
+/// {
+///   "active": true,
+///   "touching": true,
+///   "tool": "Pen",
+///   "x": 500,
+///   "y": 300,
+///   "pressure": 0.75
+/// }
+/// ```
+pub fn create_digitizer_event(body_json: String) -> Result<FfiPacket> {
+    // Parse the request body JSON
+    let body_data: serde_json::Value = serde_json::from_str(&body_json)?;
+
+    let packet = Packet::new("cosmicconnect.digitizer", body_data);
+    Ok(packet.into())
+}
+
+// ==========================================================================
 // Certificate Management
 // ==========================================================================
 
