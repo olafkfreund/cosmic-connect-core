@@ -624,35 +624,35 @@ namespace cosmic_connect_core {
 /// Network packet
 dictionary FfiPacket {
   i64 id;
-  string packet_type;
+  string packetType;
   string body;
-  i64? payload_size;
+  i64? payloadSize;
 };
 
 /// Device information for identity packets
 dictionary FfiDeviceInfo {
-  string device_id;
-  string device_name;
-  string device_type;
-  i32 protocol_version;
-  sequence<string> incoming_capabilities;
-  sequence<string> outgoing_capabilities;
-  u16 tcp_port;
+  string deviceId;
+  string deviceName;
+  string deviceType;
+  i32 protocolVersion;
+  sequence<string> incomingCapabilities;
+  sequence<string> outgoingCapabilities;
+  u16 tcpPort;
 };
 
 /// Certificate information
 dictionary FfiCertificate {
-  string device_id;
+  string deviceId;
   bytes certificate;
-  bytes private_key;
+  bytes privateKey;
   string fingerprint;
 };
 
 /// Battery state
 dictionary FfiBatteryState {
-  boolean is_charging;
-  i32 current_charge;
-  i32 threshold_event;
+  boolean isCharging;
+  i32 currentCharge;
+  i32 thresholdEvent;
 };
 
 /// Discovery event types

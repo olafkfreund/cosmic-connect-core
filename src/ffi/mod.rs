@@ -631,16 +631,14 @@ pub fn create_mute_request() -> Result<FfiPacket> {
 /// # Arguments
 /// * `conversations_json` - JSON string containing array of conversations with messages
 ///
-/// # JSON Format
-/// ```json
 /// {
 ///   "conversations": [
 ///     {
-///       "thread_id": 123,
+///       "threadId": 123,
 ///       "messages": [
 ///         {
 ///           "_id": 456,
-///           "thread_id": 123,
+///           "threadId": 123,
 ///           "address": "+1234567890",
 ///           "body": "Hello!",
 ///           "date": 1705507200000,
@@ -651,13 +649,12 @@ pub fn create_mute_request() -> Result<FfiPacket> {
 ///     }
 ///   ]
 /// }
-/// ```
 ///
 /// # Example
 /// ```rust,no_run
 /// use cosmic_connect_core::create_sms_messages;
 ///
-/// let conversations_json = r#"{"conversations":[{"thread_id":123,"messages":[]}]}"#;
+/// let conversations_json = r#"{"conversations":[{"threadId":123,"messages":[]}]}"#;
 /// let packet = create_sms_messages(conversations_json.to_string())?;
 /// // Send packet to desktop...
 /// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
@@ -1209,7 +1206,7 @@ pub fn create_systemvolume_volume(sink_name: String, volume: i32) -> Result<FfiP
         "volume": volume,
     });
 
-    let packet = Packet::new("kdeconnect.systemvolume.request", body);
+    let packet = Packet::new("cconnect.systemvolume.request", body);
     Ok(packet.into())
 }
 
@@ -1242,7 +1239,7 @@ pub fn create_systemvolume_mute(sink_name: String, muted: bool) -> Result<FfiPac
         "muted": muted,
     });
 
-    let packet = Packet::new("kdeconnect.systemvolume.request", body);
+    let packet = Packet::new("cconnect.systemvolume.request", body);
     Ok(packet.into())
 }
 
@@ -1274,7 +1271,7 @@ pub fn create_systemvolume_enable(sink_name: String) -> Result<FfiPacket> {
         "enabled": true,
     });
 
-    let packet = Packet::new("kdeconnect.systemvolume.request", body);
+    let packet = Packet::new("cconnect.systemvolume.request", body);
     Ok(packet.into())
 }
 
@@ -1301,7 +1298,7 @@ pub fn create_systemvolume_request_sinks() -> Result<FfiPacket> {
         "requestSinks": true
     });
 
-    let packet = Packet::new("kdeconnect.systemvolume.request", body);
+    let packet = Packet::new("cconnect.systemvolume.request", body);
     Ok(packet.into())
 }
 
@@ -1341,7 +1338,7 @@ pub fn create_connectivity_report(signal_strengths_json: String) -> Result<FfiPa
         "signalStrengths": signal_strengths
     });
 
-    let packet = Packet::new("kdeconnect.connectivity_report", body);
+    let packet = Packet::new("cconnect.connectivity_report", body);
     Ok(packet.into())
 }
 
@@ -1369,7 +1366,7 @@ pub fn create_connectivity_report(signal_strengths_json: String) -> Result<FfiPa
 /// # Returns
 ///
 /// An FfiPacket containing:
-/// - Type: `cosmicconnect.contacts.response_uids_timestamps`
+/// - Type: `cconnect.contacts.response_uids_timestamps`
 /// - Body: The parsed JSON data
 ///
 /// # Errors
@@ -1395,7 +1392,7 @@ pub fn create_contacts_response_uids(uids_json: String) -> Result<FfiPacket> {
     // Parse the UIDs/timestamps JSON
     let uids_data: serde_json::Value = serde_json::from_str(&uids_json)?;
 
-    let packet = Packet::new("cosmicconnect.contacts.response_uids_timestamps", uids_data);
+    let packet = Packet::new("cconnect.contacts.response_uids_timestamps", uids_data);
     Ok(packet.into())
 }
 
@@ -1418,7 +1415,7 @@ pub fn create_contacts_response_uids(uids_json: String) -> Result<FfiPacket> {
 /// # Returns
 ///
 /// An FfiPacket containing:
-/// - Type: `cosmicconnect.contacts.response_vcards`
+/// - Type: `cconnect.contacts.response_vcards`
 /// - Body: The parsed JSON data
 ///
 /// # Errors
@@ -1443,7 +1440,7 @@ pub fn create_contacts_response_vcards(vcards_json: String) -> Result<FfiPacket>
     // Parse the vCards JSON
     let vcards_data: serde_json::Value = serde_json::from_str(&vcards_json)?;
 
-    let packet = Packet::new("cosmicconnect.contacts.response_vcards", vcards_data);
+    let packet = Packet::new("cconnect.contacts.response_vcards", vcards_data);
     Ok(packet.into())
 }
 
@@ -1476,7 +1473,7 @@ pub fn create_contacts_response_vcards(vcards_json: String) -> Result<FfiPacket>
 /// # Returns
 ///
 /// An FfiPacket containing:
-/// - Type: `cosmicconnect.mpris.request`
+/// - Type: `cconnect.mpris.request`
 /// - Body: The parsed JSON data
 ///
 /// # Errors
@@ -1501,7 +1498,7 @@ pub fn create_mpris_request(body_json: String) -> Result<FfiPacket> {
     // Parse the request body JSON
     let body_data: serde_json::Value = serde_json::from_str(&body_json)?;
 
-    let packet = Packet::new("cosmicconnect.mpris.request", body_data);
+    let packet = Packet::new("cconnect.mpris.request", body_data);
     Ok(packet.into())
 }
 
@@ -1542,7 +1539,7 @@ pub fn create_mousepad_request(body_json: String) -> Result<FfiPacket> {
     // Parse the request body JSON
     let body_data: serde_json::Value = serde_json::from_str(&body_json)?;
 
-    let packet = Packet::new("cosmicconnect.mousepad.request", body_data);
+    let packet = Packet::new("cconnect.mousepad.request", body_data);
     Ok(packet.into())
 }
 
@@ -1570,7 +1567,7 @@ pub fn create_mousepad_echo(body_json: String) -> Result<FfiPacket> {
     // Parse the request body JSON
     let body_data: serde_json::Value = serde_json::from_str(&body_json)?;
 
-    let packet = Packet::new("cosmicconnect.mousepad.echo", body_data);
+    let packet = Packet::new("cconnect.mousepad.echo", body_data);
     Ok(packet.into())
 }
 
@@ -1601,7 +1598,7 @@ pub fn create_mousepad_keyboardstate(state: bool) -> Result<FfiPacket> {
         "state": state
     });
 
-    let packet = Packet::new("cosmicconnect.mousepad.keyboardstate", body);
+    let packet = Packet::new("cconnect.mousepad.keyboardstate", body);
     Ok(packet.into())
 }
 
@@ -1640,7 +1637,7 @@ pub fn create_digitizer_session(body_json: String) -> Result<FfiPacket> {
     // Parse the request body JSON
     let body_data: serde_json::Value = serde_json::from_str(&body_json)?;
 
-    let packet = Packet::new("cosmicconnect.digitizer.session", body_data);
+    let packet = Packet::new("cconnect.digitizer.session", body_data);
     Ok(packet.into())
 }
 
@@ -1670,7 +1667,7 @@ pub fn create_digitizer_event(body_json: String) -> Result<FfiPacket> {
     // Parse the request body JSON
     let body_data: serde_json::Value = serde_json::from_str(&body_json)?;
 
-    let packet = Packet::new("cosmicconnect.digitizer", body_data);
+    let packet = Packet::new("cconnect.digitizer", body_data);
     Ok(packet.into())
 }
 
@@ -1710,7 +1707,7 @@ pub fn create_sftp_packet(body_json: String) -> Result<FfiPacket> {
     // Parse the request body JSON
     let body_data: serde_json::Value = serde_json::from_str(&body_json)?;
 
-    let packet = Packet::new("cosmicconnect.sftp", body_data);
+    let packet = Packet::new("cconnect.sftp", body_data);
     Ok(packet.into())
 }
 
