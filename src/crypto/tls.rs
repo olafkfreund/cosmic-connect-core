@@ -255,17 +255,25 @@ pub struct TlsConnection {
 impl TlsConnection {
     /// Connect to a remote device using TLS (we become TLS SERVER)
     ///
-    /// KDE Connect quirk: TCP initiator acts as TLS SERVER.
+    /// KDE Connect protocol v8 handshake (as TCP initiator):
+    /// 1. Connect TCP to remote device
+    /// 2. Send our identity packet in plain text
+    /// 3. Perform TLS handshake as SERVER (inverted role!)
     ///
     /// # Arguments
     ///
     /// * `addr` - Remote socket address
     /// * `config` - TLS configuration
-    pub async fn connect(addr: SocketAddr, config: &TlsConfig) -> Result<Self> {
+    /// * `identity_bytes` - Our identity packet bytes to send before TLS (already serialized)
+    pub async fn connect(
+        addr: SocketAddr,
+        config: &TlsConfig,
+        identity_bytes: &[u8],
+    ) -> Result<Self> {
         info!("Connecting to {} via TLS (we are TLS SERVER)", addr);
 
         // Connect TCP stream
-        let tcp_stream = timeout(TLS_TIMEOUT, TcpStream::connect(addr))
+        let mut tcp_stream = timeout(TLS_TIMEOUT, TcpStream::connect(addr))
             .await
             .map_err(|_| {
                 ProtocolError::Io(io::Error::new(
@@ -275,6 +283,25 @@ impl TlsConnection {
             })??;
 
         debug!("TCP connection established to {}", addr);
+
+        // Send our identity packet in plain text BEFORE TLS handshake
+        // This is required by KDE Connect protocol v8
+        debug!(
+            "Sending plain-text identity packet ({} bytes) to {}",
+            identity_bytes.len(),
+            addr
+        );
+
+        timeout(TLS_TIMEOUT, tcp_stream.write_all(identity_bytes))
+            .await
+            .map_err(|_| {
+                ProtocolError::Io(io::Error::new(
+                    io::ErrorKind::TimedOut,
+                    "Timeout sending identity packet",
+                ))
+            })??;
+
+        debug!("Plain-text identity packet sent to {}", addr);
 
         // Create TLS acceptor with SERVER config (inverted role!)
         let acceptor = TlsAcceptor::from(config.server_config());
