@@ -129,6 +129,9 @@ pub mod notification;   // ✅ Device architecture refactored for FFI
 // pub mod clipboard;     // ⚠️  TODO: Requires Device architecture refactoring for FFI
 pub mod share;            // ✅  Phase 1 complete: Device dependencies removed (Issue #53)
 
+// Streaming plugins
+pub mod camera;           // ✅  Camera webcam streaming (Issue #99-#100)
+
 // Remote control plugins
 // pub mod remoteinput;   // ⚠️  TODO: Requires mouse_keyboard_input crate (Linux-only)
 // pub mod mpris;         // ⚠️  TODO: Requires Device architecture refactoring for FFI
