@@ -23,13 +23,9 @@ use crate::video::frame::{PixelFormat, VideoFrame};
 use std::fmt;
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::os::unix::io::AsRawFd;
 use std::path::PathBuf;
 use tracing::{debug, info, warn};
-use v4l::buffer::Type;
-use v4l::io::traits::OutputStream;
 use v4l::prelude::*;
-use v4l::video::Output;
 use v4l::FourCC;
 
 /// Error types for V4L2 operations
@@ -144,53 +140,54 @@ impl V4l2LoopbackDevice {
     }
 
     /// Set the video format on the device
+    ///
+    /// Note: For v4l2loopback devices, the format is often auto-negotiated.
+    /// This function attempts to configure the format but may silently succeed
+    /// even if the device doesn't fully support the requested parameters.
     fn set_format(
         &self,
-        file: &std::fs::File,
+        _file: &std::fs::File,
         width: u32,
         height: u32,
         format: PixelFormat,
     ) -> Result<(), V4l2Error> {
-        use v4l::format::fourcc::Encoding;
-        use v4l::v4l2;
+        // For v4l2loopback, we use a simpler approach:
+        // The device accepts writes in the configured format.
+        // We'll validate format support when opening with v4l Device.
 
-        let fd = file.as_raw_fd();
+        // Try to open device with v4l to set format
+        let device = Device::with_path(&self.path)
+            .map_err(|e| V4l2Error::OpenError(e.to_string()))?;
 
-        // Create format structure
-        let mut fmt = v4l2::Format {
-            type_: v4l2::BufType::VideoOutput as u32,
-            fmt: v4l2::FormatUnion {
-                pix: v4l2::PixFormat {
-                    width,
-                    height,
-                    pixelformat: format.fourcc(),
-                    field: v4l2::Field::None as u32,
-                    bytesperline: self.bytes_per_line(width, &format),
-                    sizeimage: format.buffer_size(width, height) as u32,
-                    colorspace: v4l2::Colorspace::SRGB as u32,
-                    ..Default::default()
-                },
-            },
-        };
+        // Build format description
+        let fourcc = FourCC::new(&self.fourcc_bytes(&format));
+        let mut fmt = v4l::Format::new(width, height, fourcc);
 
-        // Set format using ioctl
-        unsafe {
-            if v4l2::vidioc::set_fmt(fd, &mut fmt).is_err() {
-                return Err(V4l2Error::ConfigError(format!(
-                    "Failed to set format: {}x{} {:?}",
-                    width, height, format
-                )));
-            }
+        // Try to set the format (may not work for all loopback configurations)
+        if let Err(e) = device.set_format(&fmt) {
+            // Log warning but don't fail - v4l2loopback often works without explicit format set
+            warn!("Could not set V4L2 format (may still work): {}", e);
         }
 
         debug!(
-            "Set V4L2 format: {}x{}, fourcc=0x{:08x}",
+            "Set V4L2 format: {}x{}, fourcc={:?}",
             width,
             height,
-            format.fourcc()
+            fourcc
         );
 
         Ok(())
+    }
+
+    /// Convert PixelFormat to fourcc bytes
+    fn fourcc_bytes(&self, format: &PixelFormat) -> [u8; 4] {
+        match format {
+            PixelFormat::I420 => *b"I420",
+            PixelFormat::NV12 => *b"NV12",
+            PixelFormat::YUYV => *b"YUYV",
+            PixelFormat::RGB24 => *b"RGB3",
+            PixelFormat::RGBA32 => *b"AB24",
+        }
     }
 
     /// Calculate bytes per line for a format

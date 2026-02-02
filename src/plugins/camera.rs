@@ -1182,6 +1182,8 @@ impl FrameReceiver {
             height: config.height,
             fps: config.fps,
             output_format: PixelFormat::YUYV,
+            queue_size: 5,
+            enable_perf_monitoring: true,
         };
 
         Self {
