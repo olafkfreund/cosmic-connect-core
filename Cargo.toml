@@ -1,6 +1,6 @@
 [package]
 name = "cosmic-connect-core"
-version = "0.1.0"
+version = "0.9.0"
 edition = "2021"
 rust-version = "1.70"
 authors = ["Olaf Kfreund <olafkfreund@gmail.com>"]
