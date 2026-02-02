@@ -2,17 +2,31 @@
 //!
 //! Network communication layer for KDE Connect protocol.
 //!
-//! This module contains:
-//! - `Discovery`: UDP device discovery on port 1816
-//! - `Transport`: Transport abstraction (TCP, Bluetooth)
-//! - `TcpTransport`: TCP connection management (TODO: Extract from applet)
-//! - `TlsTransport`: Secure TLS connections (TODO: Rewrite with rustls)
+//! ## Implemented Modules
+//!
+//! - [`discovery`] - UDP device discovery on port 1716
+//! - [`transport`] - Transport abstraction (TCP, Bluetooth)
+//!
+//! ## Planned Modules
+//!
+//! The following modules require extraction from the desktop applet:
+//!
+//! ### tcp
+//! - **Status**: Planned extraction
+//! - **Description**: TCP connection management for device communication
+//! - **Location**: Currently in `cosmic-connect-daemon/src/device.rs`
+//! - **Requirements**: Extract and adapt for cross-platform FFI use
+//! - **Features**: Connection pooling, automatic reconnection, port fallback (1716-1764)
+//!
+//! ### tls
+//! - **Status**: Completed (Issue #47)
+//! - **Description**: Secure TLS connections using rustls
+//! - **Location**: Integrated into transport layer
+//! - **Notes**: Uses self-signed certificates with SHA-256 fingerprints
 
 // Module exports
 pub mod discovery;  // ✅ Extracted (Issue #46)
 pub mod transport;  // ✅ Transport abstraction layer
-// pub mod tcp;     // TODO: Extract from applet
-// pub mod tls;     // TODO: Rewrite with rustls (Issue #47)
 
 // Re-exports for convenience
 pub use discovery::{

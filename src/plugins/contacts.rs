@@ -21,7 +21,7 @@
 //! - [Valent Protocol](https://valent.andyholmes.ca/documentation/protocol.html)
 
 use crate::plugins::Plugin;
-use crate::error::Result;
+use crate::error::{ProtocolError, Result};
 use crate::protocol::Packet;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -212,8 +212,12 @@ impl ContactsPlugin {
             emails.len()
         );
 
-        // TODO: Store parsed contact information in database
-        // TODO: Emit DBus signal for UI updates
+        // Note: Contact storage and UI updates are platform-specific concerns.
+        // The platform layer (daemon/Android app) should:
+        // 1. Subscribe to plugin events via PluginManager callbacks
+        // 2. Store parsed contacts in platform-appropriate storage (SQLite, ContentProvider, etc.)
+        // 3. Emit platform-specific signals (DBus on Linux, Intents on Android)
+        // The parsed data is available via get_vcard() for the platform layer to consume.
     }
 
     /// Get all cached contact UIDs
@@ -269,8 +273,16 @@ impl Plugin for ContactsPlugin {
 
     async fn initialize(&mut self) -> Result<()> {
         info!("Starting contacts plugin");
-        // Automatically request contacts on start
-        // TODO: Send request packet via plugin manager
+
+        // Note: Initial contact sync should be triggered by the platform layer.
+        // The plugin provides create_request_all_uids_timestamps() and
+        // create_request_vcards_by_uid() methods for the platform to call.
+        // This separation allows the platform to:
+        // 1. Check permissions before requesting contacts
+        // 2. Respect user preferences (auto-sync vs manual)
+        // 3. Handle rate limiting and network conditions
+        // The platform layer should call these methods after device pairing is confirmed.
+
         Ok(())
     }
 
@@ -298,15 +310,9 @@ impl Plugin for ContactsPlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{DeviceInfo, DeviceType};
 
     fn create_test_plugin() -> ContactsPlugin {
         ContactsPlugin::new()
-    }
-
-    fn create_test_device() -> Device {
-        let info = DeviceInfo::new("Test Device", DeviceType::Phone, 1816);
-        Device::from_discovery(info)
     }
 
     #[test]
@@ -353,7 +359,6 @@ mod tests {
     #[tokio::test]
     async fn test_handle_uids_timestamps_response() {
         let mut plugin = create_test_plugin();
-        let mut device = create_test_device();
 
         let packet = Packet::new(
             PACKET_TYPE_RESPONSE_UIDS_TIMESTAMPS,
@@ -365,7 +370,7 @@ mod tests {
             }),
         );
 
-        plugin.handle_packet(&packet, &mut device).await.unwrap();
+        plugin.handle_packet(&packet).await.unwrap();
 
         assert_eq!(plugin.get_contact_count(), 2);
         assert!(plugin.get_all_contact_uids().contains(&"contact1".to_string()));
@@ -375,7 +380,6 @@ mod tests {
     #[tokio::test]
     async fn test_handle_vcards_response() {
         let mut plugin = create_test_plugin();
-        let mut device = create_test_device();
 
         let vcard_data = "BEGIN:VCARD\nVERSION:2.1\nFN:John Doe\nTEL:+1234567890\nEND:VCARD";
         let packet = Packet::new(
@@ -387,7 +391,7 @@ mod tests {
             }),
         );
 
-        plugin.handle_packet(&packet, &mut device).await.unwrap();
+        plugin.handle_packet(&packet).await.unwrap();
 
         assert_eq!(plugin.vcards_cache.len(), 1);
         assert!(plugin.get_vcard("contact1").is_some());
