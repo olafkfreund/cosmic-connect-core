@@ -124,31 +124,31 @@ pub mod battery;       // ✅ Battery status monitoring
 pub mod notification;   // ✅ Device architecture refactored for FFI
 pub mod notification_image; // ✅ Rich notification image support (Issue #126)
 
-//! ## Planned Communication Plugins
-//!
-//! The following communication plugins are planned but blocked on architecture work:
-//!
-//! ### telephony
-//! - **Status**: Blocked
-//! - **Requirements**: Device FFI refactoring (Issue #46)
-//! - **Description**: Call and SMS notifications
-//! - **Capabilities**: `kdeconnect.telephony`, `kdeconnect.telephony.request_mute`
-//!
-//! ### contacts
-//! - **Status**: Blocked
-//! - **Requirements**: Device FFI refactoring (Issue #46)
-//! - **Description**: Contact synchronization
-//! - **Capabilities**: `kdeconnect.contacts.request_all_uids_timestamps`, `kdeconnect.contacts.request_vcards_by_uid`
+// ## Planned Communication Plugins
+//
+// The following communication plugins are planned but blocked on architecture work:
+//
+// ### telephony
+// - **Status**: Blocked
+// - **Requirements**: Device FFI refactoring (Issue #46)
+// - **Description**: Call and SMS notifications
+// - **Capabilities**: `kdeconnect.telephony`, `kdeconnect.telephony.request_mute`
+//
+// ### contacts
+// - **Status**: Blocked
+// - **Requirements**: Device FFI refactoring (Issue #46)
+// - **Description**: Contact synchronization
+// - **Capabilities**: `kdeconnect.contacts.request_all_uids_timestamps`, `kdeconnect.contacts.request_vcards_by_uid`
 
 // Content sharing plugins
 
-//! ## Planned Content Sharing Plugins
-//!
-//! ### clipboard
-//! - **Status**: Blocked
-//! - **Requirements**: Device FFI refactoring (Issue #46)
-//! - **Description**: Clipboard synchronization across devices
-//! - **Capabilities**: `kdeconnect.clipboard`, `kdeconnect.clipboard.connect`
+// ## Planned Content Sharing Plugins
+//
+// ### clipboard
+// - **Status**: Blocked
+// - **Requirements**: Device FFI refactoring (Issue #46)
+// - **Description**: Clipboard synchronization across devices
+// - **Capabilities**: `kdeconnect.clipboard`, `kdeconnect.clipboard.connect`
 
 pub mod share;            // ✅  Phase 1 complete: Device dependencies removed (Issue #53)
 
@@ -160,46 +160,46 @@ pub mod open;             // ✅  Open content on remote devices (Issue #113)
 
 // Remote control plugins
 
-//! ## Planned Remote Control Plugins
-//!
-//! The following remote control plugins require platform-specific dependencies:
-//!
-//! ### remoteinput
-//! - **Status**: Blocked
-//! - **Requirements**: `mouse_keyboard_input` crate (Linux-only, needs cross-platform alternative)
-//! - **Description**: Remote mouse and keyboard control
-//! - **Capabilities**: `kdeconnect.mousepad.request`, `kdeconnect.mousepad.keyboardstate`
-//! - **Notes**: Needs abstraction layer for Android/Desktop platform differences
-//!
-//! ### mpris
-//! - **Status**: Blocked
-//! - **Requirements**: Device FFI refactoring (Issue #46)
-//! - **Description**: Media player control via MPRIS2 protocol
-//! - **Capabilities**: `kdeconnect.mpris`, `kdeconnect.mpris.request`
-//!
-//! ### runcommand
-//! - **Status**: Blocked
-//! - **Requirements**: Device FFI refactoring (Issue #46)
-//! - **Description**: Remote command execution with command registry
-//! - **Capabilities**: `kdeconnect.runcommand`, `kdeconnect.runcommand.request`
-//! - **Security**: Requires command whitelist and permissions system
-//!
-//! ### presenter
-//! - **Status**: Blocked
-//! - **Requirements**: Device FFI refactoring (Issue #46)
-//! - **Description**: Presentation remote control (pointer, slides)
-//! - **Capabilities**: `kdeconnect.presenter`
+// ## Planned Remote Control Plugins
+//
+// The following remote control plugins require platform-specific dependencies:
+//
+// ### remoteinput
+// - **Status**: Blocked
+// - **Requirements**: `mouse_keyboard_input` crate (Linux-only, needs cross-platform alternative)
+// - **Description**: Remote mouse and keyboard control
+// - **Capabilities**: `kdeconnect.mousepad.request`, `kdeconnect.mousepad.keyboardstate`
+// - **Notes**: Needs abstraction layer for Android/Desktop platform differences
+//
+// ### mpris
+// - **Status**: Blocked
+// - **Requirements**: Device FFI refactoring (Issue #46)
+// - **Description**: Media player control via MPRIS2 protocol
+// - **Capabilities**: `kdeconnect.mpris`, `kdeconnect.mpris.request`
+//
+// ### runcommand
+// - **Status**: Blocked
+// - **Requirements**: Device FFI refactoring (Issue #46)
+// - **Description**: Remote command execution with command registry
+// - **Capabilities**: `kdeconnect.runcommand`, `kdeconnect.runcommand.request`
+// - **Security**: Requires command whitelist and permissions system
+//
+// ### presenter
+// - **Status**: Blocked
+// - **Requirements**: Device FFI refactoring (Issue #46)
+// - **Description**: Presentation remote control (pointer, slides)
+// - **Capabilities**: `kdeconnect.presenter`
 
 // Utility plugins
 
-//! ## Planned Utility Plugins
-//!
-//! ### findmyphone
-//! - **Status**: Blocked
-//! - **Requirements**: Device FFI refactoring (Issue #46)
-//! - **Description**: Trigger phone ringtone for locating device
-//! - **Capabilities**: `kdeconnect.findmyphone.request`
-//! - **Notes**: Requires platform audio APIs
+// ## Planned Utility Plugins
+//
+// ### findmyphone
+// - **Status**: Blocked
+// - **Requirements**: Device FFI refactoring (Issue #46)
+// - **Description**: Trigger phone ringtone for locating device
+// - **Capabilities**: `kdeconnect.findmyphone.request`
+// - **Notes**: Requires platform audio APIs
 
 // Re-exports for convenience
 pub use r#trait::{Plugin, PluginMetadata};
