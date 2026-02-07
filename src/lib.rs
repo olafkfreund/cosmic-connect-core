@@ -75,8 +75,15 @@ pub use ffi::{
     create_digitizer_session, create_digitizer_event,
     create_sftp_packet,
     create_lock_packet, create_lock_request, create_lock_status_request,
+    // create_screenshare_status, create_screenshare_start_request, create_screenshare_stop_request,
+    // create_virtualmonitor_status, create_virtualmonitor_enable_request,
+    // create_virtualmonitor_disable_request,
+    // create_filesync_notification, create_filesync_request_sync, create_filesync_add_folder,
+    // create_filesync_remove_folder, create_filesync_list_folders, create_filesync_conflict,
     create_webcam_start_request, create_webcam_stop_request, create_webcam_capability_request,
     create_webcam_status, create_webcam_capability,
+    create_audiostream_status, create_audiostream_start_request, create_audiostream_stop_request,
+    create_audiostream_capability_query, create_audiostream_capability_response,
 };
 
 // Re-export NotificationImage for UniFFI

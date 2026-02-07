@@ -156,6 +156,7 @@ pub mod share;            // ✅  Phase 1 complete: Device dependencies removed 
 // Streaming plugins
 pub mod camera;           // ✅  Camera webcam streaming (Issue #99-#100)
 pub mod webcam;           // ✅  Webcam streaming (desktop → phone)
+pub mod audiostream;      // ✅  Audio streaming (Issue #153)
 
 // App continuity plugins
 pub mod open;             // ✅  Open content on remote devices (Issue #113)
@@ -204,6 +205,9 @@ pub mod open;             // ✅  Open content on remote devices (Issue #113)
 // - **Notes**: Requires platform audio APIs
 
 pub mod lock;             // ✅ Lock/unlock device screen
+pub mod filesync;         // ✅ File synchronization
+pub mod screenshare;      // ✅ Screen sharing with configurable resolution and codec
+pub mod virtualmonitor;   // ✅ Virtual monitor plugin
 
 // Re-exports for convenience
 pub use r#trait::{Plugin, PluginMetadata};

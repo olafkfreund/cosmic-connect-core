@@ -846,6 +846,66 @@ namespace cosmic_connect_core {
   /// * `cameras_json` - JSON string describing available cameras
   [Throws=ProtocolError]
   FfiPacket create_webcam_capability(string cameras_json);
+
+  // ========================================================================
+  // AudioStream Plugin
+  // ========================================================================
+
+  /// Create an audio stream status packet
+  ///
+  /// # Arguments
+  ///
+  /// * `is_streaming` - Whether audio is currently streaming
+  /// * `codec` - Active codec (e.g., "opus", "aac")
+  /// * `sample_rate` - Sample rate in Hz
+  /// * `channels` - Number of audio channels (1=mono, 2=stereo)
+  /// * `direction` - Stream direction ("phone_to_desktop" or "desktop_to_phone")
+  [Throws=ProtocolError]
+  FfiPacket create_audiostream_status(
+    boolean is_streaming,
+    string codec,
+    i32 sample_rate,
+    i32 channels,
+    string direction
+  );
+
+  /// Create an audio stream start request packet
+  ///
+  /// # Arguments
+  ///
+  /// * `codec` - Requested codec
+  /// * `sample_rate` - Requested sample rate in Hz
+  /// * `channels` - Requested number of channels
+  /// * `direction` - Requested stream direction
+  [Throws=ProtocolError]
+  FfiPacket create_audiostream_start_request(
+    string codec,
+    i32 sample_rate,
+    i32 channels,
+    string direction
+  );
+
+  /// Create an audio stream stop request packet
+  [Throws=ProtocolError]
+  FfiPacket create_audiostream_stop_request();
+
+  /// Create an audio stream capability query packet
+  [Throws=ProtocolError]
+  FfiPacket create_audiostream_capability_query();
+
+  /// Create an audio stream capability response packet
+  ///
+  /// # Arguments
+  ///
+  /// * `codecs_json` - JSON array of supported codecs (e.g., "[\"opus\",\"aac\"]")
+  /// * `sample_rates_json` - JSON array of supported sample rates (e.g., "[44100,48000]")
+  /// * `max_channels` - Maximum number of channels supported
+  [Throws=ProtocolError]
+  FfiPacket create_audiostream_capability_response(
+    string codecs_json,
+    string sample_rates_json,
+    i32 max_channels
+  );
 };
 
 // ==========================================================================

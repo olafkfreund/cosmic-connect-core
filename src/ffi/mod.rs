@@ -2671,6 +2671,91 @@ pub fn start_payload_download(
     Ok(handle)
 }
 
+// ==========================================================================
+// AudioStream Plugin
+// ==========================================================================
+
+/// Create an audio stream status packet
+///
+/// # Arguments
+///
+/// * `is_streaming` - Whether audio is currently streaming
+/// * `codec` - Active codec (e.g., "opus", "aac")
+/// * `sample_rate` - Sample rate in Hz
+/// * `channels` - Number of audio channels (1=mono, 2=stereo)
+/// * `direction` - Stream direction ("phone_to_desktop" or "desktop_to_phone")
+pub fn create_audiostream_status(
+    is_streaming: bool,
+    codec: String,
+    sample_rate: i32,
+    channels: i32,
+    direction: String,
+) -> Result<FfiPacket> {
+    let packet = crate::plugins::audiostream::create_audiostream_status(
+        is_streaming,
+        &codec,
+        sample_rate,
+        channels,
+        &direction,
+    )?;
+    Ok(packet.into())
+}
+
+/// Create an audio stream start request packet
+///
+/// # Arguments
+///
+/// * `codec` - Requested codec
+/// * `sample_rate` - Requested sample rate in Hz
+/// * `channels` - Requested number of channels
+/// * `direction` - Requested stream direction
+pub fn create_audiostream_start_request(
+    codec: String,
+    sample_rate: i32,
+    channels: i32,
+    direction: String,
+) -> Result<FfiPacket> {
+    let packet = crate::plugins::audiostream::create_audiostream_start_request(
+        &codec,
+        sample_rate,
+        channels,
+        &direction,
+    )?;
+    Ok(packet.into())
+}
+
+/// Create an audio stream stop request packet
+pub fn create_audiostream_stop_request() -> Result<FfiPacket> {
+    let packet = crate::plugins::audiostream::create_audiostream_stop_request()?;
+    Ok(packet.into())
+}
+
+/// Create an audio stream capability query packet
+pub fn create_audiostream_capability_query() -> Result<FfiPacket> {
+    let packet = crate::plugins::audiostream::create_audiostream_capability_query()?;
+    Ok(packet.into())
+}
+
+/// Create an audio stream capability response packet
+///
+/// # Arguments
+///
+/// * `codecs_json` - JSON array of supported codecs (e.g., "[\"opus\",\"aac\"]")
+/// * `sample_rates_json` - JSON array of supported sample rates (e.g., "[44100,48000]")
+/// * `max_channels` - Maximum number of channels supported
+pub fn create_audiostream_capability_response(
+    codecs_json: String,
+    sample_rates_json: String,
+    max_channels: i32,
+) -> Result<FfiPacket> {
+    let packet = crate::plugins::audiostream::create_audiostream_capability_response(
+        &codecs_json,
+        &sample_rates_json,
+        max_channels,
+    )?;
+    Ok(packet.into())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
