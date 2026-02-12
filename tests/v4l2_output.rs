@@ -40,7 +40,7 @@ fn test_v4l2_device_creation() {
     let device = V4l2LoopbackDevice::new(device_path);
 
     // Device should be created (not opened yet)
-    assert!(!device.is_open);
+    assert!(!device.is_open());
 }
 
 /// Test V4L2 device opening with YUYV format
@@ -58,7 +58,7 @@ fn test_v4l2_device_open_yuyv() {
 
     match result {
         Ok(()) => {
-            assert!(device.is_open);
+            assert!(device.is_open());
             println!("Successfully opened V4L2 device at 1280x720 YUYV");
         }
         Err(V4l2Error::PermissionDenied(path)) => {
@@ -98,7 +98,7 @@ fn test_v4l2_device_formats() {
         match result {
             Ok(()) => {
                 println!("Successfully opened V4L2 device with {} format", name);
-                assert!(device.is_open);
+                assert!(device.is_open());
             }
             Err(V4l2Error::PermissionDenied(_)) | Err(V4l2Error::DeviceNotFound(_)) => {
                 println!("Skipping {} test: Device not accessible", name);
@@ -140,7 +140,7 @@ fn test_v4l2_write_single_frame() {
     match write_result {
         Ok(()) => {
             println!("Successfully wrote frame to V4L2 device");
-            assert_eq!(device.frames_written, 1);
+            assert_eq!(device.frames_written(), 1);
         }
         Err(e) => {
             println!("Write error (may be expected): {}", e);
@@ -268,13 +268,13 @@ fn test_v4l2_write_wrong_size() {
     }
 
     // Create frame with wrong dimensions
-    let wrong_frame = VideoFrame {
-        width: 640,
-        height: 480,
-        format: PixelFormat::YUYV,
-        data: vec![128u8; 640 * 480 * 2],
-        timestamp: std::time::Duration::from_secs(0),
-    };
+    let wrong_frame = VideoFrame::from_data(
+        640,
+        480,
+        PixelFormat::YUYV,
+        0,
+        vec![128u8; 640 * 480 * 2],
+    );
 
     // Should reject frame with wrong size
     let write_result = device.write_frame(&wrong_frame);
@@ -380,15 +380,15 @@ fn test_v4l2_frame_statistics() {
         return;
     }
 
-    assert_eq!(device.frames_written, 0, "Should start at 0 frames");
+    assert_eq!(device.frames_written(), 0, "Should start at 0 frames");
 
     // Write multiple frames
-    for i in 0..10 {
+    for i in 0..10u64 {
         let test_frame = MockYuvFrame::solid_color(1280, 720, PixelFormat::YUYV, 128, 128, 128);
 
         if device.write_frame(&test_frame.to_video_frame()).is_ok() {
             assert_eq!(
-                device.frames_written,
+                device.frames_written(),
                 i + 1,
                 "Frame counter should increment"
             );
@@ -398,7 +398,7 @@ fn test_v4l2_frame_statistics() {
     }
 
     assert!(
-        device.frames_written > 0,
+        device.frames_written() > 0,
         "Should have written some frames"
     );
 }
@@ -445,6 +445,7 @@ fn test_full_decode_to_v4l2_pipeline() {
         return;
     }
 
+    use cosmic_ext_connect_core::plugins::camera::FrameType;
     use cosmic_ext_connect_core::video::h264_decoder::H264Decoder;
 
     let device_path = get_test_device_path();
@@ -458,7 +459,7 @@ fn test_full_decode_to_v4l2_pipeline() {
     }
 
     // Create decoder
-    let mut decoder = H264Decoder::new(1280, 720).unwrap();
+    let mut decoder = H264Decoder::new().unwrap();
 
     // Generate mock frame sequence
     let frames = mock_frame_sequence(500, 30, 15);
@@ -466,10 +467,14 @@ fn test_full_decode_to_v4l2_pipeline() {
     let mut frames_written = 0;
 
     for mock_frame in frames.iter().take(30) {
-        let camera_frame = mock_frame.to_camera_frame();
+        // Decode frame using the actual API
+        let decode_result = if mock_frame.frame_type == FrameType::SpsPps {
+            decoder.decode_sps_pps(&mock_frame.data).map(|_| None)
+        } else {
+            decoder.decode(&mock_frame.data, mock_frame.timestamp_us)
+        };
 
-        // Decode frame
-        match decoder.decode_frame(&camera_frame) {
+        match decode_result {
             Ok(Some(video_frame)) => {
                 // Write to V4L2
                 if v4l2_device.write_frame(&video_frame).is_ok() {

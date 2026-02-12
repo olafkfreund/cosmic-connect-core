@@ -5,7 +5,7 @@
 
 use cosmic_ext_connect_core::plugins::camera::{CameraFrame, FrameType};
 use cosmic_ext_connect_core::video::frame::{PixelFormat, VideoFrame};
-use std::time::Duration;
+
 
 /// Mock H.264 SPS (Sequence Parameter Set) NAL unit for testing
 ///
@@ -122,13 +122,13 @@ impl MockCameraFrame {
         }
     }
 
-    /// Convert to CameraFrame for transmission
+    /// Convert to CameraFrame header for transmission
     pub fn to_camera_frame(&self) -> CameraFrame {
         CameraFrame {
             frame_type: self.frame_type.clone(),
             timestamp_us: self.timestamp_us,
             sequence_number: self.sequence_number,
-            data: self.data.clone(),
+            size: self.data.len() as u64,
         }
     }
 }
@@ -265,13 +265,13 @@ impl MockYuvFrame {
 
     /// Convert to VideoFrame
     pub fn to_video_frame(&self) -> VideoFrame {
-        VideoFrame {
-            width: self.width,
-            height: self.height,
-            format: self.format,
-            data: self.data.clone(),
-            timestamp: Duration::from_secs(0),
-        }
+        VideoFrame::from_data(
+            self.width,
+            self.height,
+            self.format,
+            0,
+            self.data.clone(),
+        )
     }
 }
 

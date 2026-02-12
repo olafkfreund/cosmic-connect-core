@@ -89,6 +89,18 @@ uniffi = { version = "0.27", features = ["build"] }
 name = "uniffi-bindgen"
 path = "uniffi-bindgen.rs"
 
+[[test]]
+name = "camera_integration"
+required-features = ["video"]
+
+[[test]]
+name = "camera_test_utils"
+required-features = ["video"]
+
+[[test]]
+name = "v4l2_output"
+required-features = ["video"]
+
 [profile.release]
 opt-level = 3
 lto = true

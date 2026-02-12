@@ -216,6 +216,19 @@ impl NotificationLink {
 ///     request_reply_id: None,
 ///     actions: None,
 ///     payload_hash: None,
+///     rich_text: None,
+///     has_rich_text: None,
+///     has_image: None,
+///     image_url: None,
+///     image_mime_type: None,
+///     image_width: None,
+///     image_height: None,
+///     has_video: None,
+///     video_url: None,
+///     video_thumbnail_url: None,
+///     video_duration: None,
+///     video_mime_type: None,
+///     links: None,
 /// };
 ///
 /// assert_eq!(notif.id, "notif-123");
