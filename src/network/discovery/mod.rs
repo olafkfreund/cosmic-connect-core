@@ -270,12 +270,25 @@ impl DeviceInfo {
             .get_body_field::<u16>("tcpPort")
             .ok_or_else(|| ProtocolError::InvalidPacket("Missing tcpPort".to_string()))?;
 
+        // Handle both native JSON arrays and stringified JSON arrays.
+        // Some clients (e.g. Android) send capabilities as a JSON string
+        // containing an array rather than a native JSON array.
         let incoming_capabilities = packet
             .get_body_field::<Vec<String>>("incomingCapabilities")
+            .or_else(|| {
+                packet
+                    .get_body_field::<String>("incomingCapabilities")
+                    .and_then(|s| serde_json::from_str::<Vec<String>>(&s).ok())
+            })
             .unwrap_or_default();
 
         let outgoing_capabilities = packet
             .get_body_field::<Vec<String>>("outgoingCapabilities")
+            .or_else(|| {
+                packet
+                    .get_body_field::<String>("outgoingCapabilities")
+                    .and_then(|s| serde_json::from_str::<Vec<String>>(&s).ok())
+            })
             .unwrap_or_default();
 
         Ok(Self {
